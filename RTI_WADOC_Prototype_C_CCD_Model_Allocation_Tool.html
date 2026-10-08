@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RTI Prototype C – CCD Model Allocation Tool (WADOC Workload Study)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1F3864; --ink:#1d2330; --slate:#4A5566; --muted:#6b7280; --rule:#d6dbe3; --panel:#f3f5f8; --bg:#ffffff;
+  --under:#A33A22; --near:#B7791F; --ok:#3B6E78; --focus:#2E5597; --input:#ffffff;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --navy:#9db4dc; --ink:#e6e9ef; --slate:#b5bdca; --muted:#9aa3b2; --rule:#343b48; --panel:#1c212a; --bg:#12161d;
+  --under:#e0735a; --near:#d9a441; --ok:#6fb0bb; --focus:#8fb0ea; --input:#171b23; } }
+:root[data-theme="dark"]{
+  --navy:#9db4dc; --ink:#e6e9ef; --slate:#b5bdca; --muted:#9aa3b2; --rule:#343b48; --panel:#1c212a; --bg:#12161d;
+  --under:#e0735a; --near:#d9a441; --ok:#6fb0bb; --focus:#8fb0ea; --input:#171b23; }
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",Arial,Helvetica,sans-serif;font-size:15px;line-height:1.45;font-variant-numeric:tabular-nums}
+header{border-bottom:2px solid var(--navy);padding:18px 24px 12px;display:flex;flex-wrap:wrap;gap:8px 24px;align-items:baseline;justify-content:space-between}
+header h1{margin:0;font-size:21px;font-weight:600;color:var(--navy)}
+header p{margin:0;color:var(--muted);font-size:13.5px;max-width:70ch}
+.sim{display:inline-block;border:1px solid var(--under);color:var(--under);font-size:12.5px;padding:1px 8px;border-radius:3px;margin-left:6px;vertical-align:2px}
+.wrap{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 80px)}
+aside{border-right:1px solid var(--rule);padding:16px 18px 40px;background:var(--panel)}
+aside h2{font-size:15px;font-weight:600;color:var(--navy);margin:18px 0 8px}
+aside h2:first-child{margin-top:0}
+.ctl{margin:10px 0 14px}
+.ctl label{display:flex;justify-content:space-between;font-size:13.5px;color:var(--slate);margin-bottom:4px}
+.ctl output{color:var(--ink);font-weight:500}
+input[type=range]{width:100%;accent-color:var(--navy)}
+input[type=number],select,input[type=text]{width:100%;font:inherit;font-size:14px;padding:5px 7px;border:1px solid var(--rule);border-radius:3px;background:var(--input);color:var(--ink)}
+.seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--navy);border-radius:3px;overflow:hidden}
+.seg button{font:inherit;font-size:13.5px;padding:6px 4px;border:0;background:var(--input);color:var(--navy);cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--navy);color:var(--bg)}
+.chk{display:flex;gap:8px;align-items:center;font-size:13.5px;color:var(--slate)}
+.btnrow{display:flex;gap:8px;margin-top:8px}
+.btn{font:inherit;font-size:13.5px;padding:6px 10px;border:1px solid var(--navy);background:var(--input);color:var(--navy);border-radius:3px;cursor:pointer}
+.btn.primary{background:var(--navy);color:var(--bg)}
+button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+main{padding:16px 24px 48px;min-width:0}
+nav.tabs{display:flex;gap:2px;border-bottom:1px solid var(--rule);margin-bottom:16px;overflow-x:auto}
+nav.tabs button{font:inherit;font-size:14.5px;padding:8px 14px;border:0;border-bottom:3px solid transparent;background:none;color:var(--slate);cursor:pointer;white-space:nowrap}
+nav.tabs button[aria-selected=true]{color:var(--navy);border-bottom-color:var(--navy);font-weight:600}
+.headline{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0;border:1px solid var(--rule);margin-bottom:18px}
+.headline div{padding:12px 14px;border-right:1px solid var(--rule)}
+.headline div:last-child{border-right:0}
+.headline b{display:block;font-size:24px;font-weight:600;color:var(--navy)}
+.headline span{font-size:13px;color:var(--muted)}
+.delta{font-size:12.5px;margin-left:6px;font-weight:500}
+.delta.up{color:var(--under)} .delta.down{color:var(--ok)}
+h3{font-size:16px;font-weight:600;color:var(--navy);margin:22px 0 8px}
+.note{color:var(--muted);font-size:13px;max-width:80ch}
+.scroll{overflow-x:auto;border:1px solid var(--rule)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:6px 9px;border-bottom:1px solid var(--rule);text-align:right;white-space:nowrap}
+th{background:var(--panel);color:var(--slate);font-weight:600;position:sticky;top:0;cursor:pointer}
+th:first-child,td:first-child,th.l,td.l{text-align:left}
+tr.region td{background:var(--panel);font-weight:600;color:var(--navy)}
+td input{width:76px;min-width:76px;text-align:right;padding:3px 6px}
+td input::-webkit-outer-spin-button,td input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+td input[type=number]{-moz-appearance:textfield;appearance:textfield}
+.pct{font-weight:600}
+.c-under{color:var(--under)} .c-near{color:var(--near)} .c-ok{color:var(--ok)}
+/* strip chart */
+.strip{display:grid;grid-template-columns:170px 1fr 58px;gap:4px 10px;align-items:center;font-size:13px}
+.strip .bar{position:relative;height:14px;background:var(--panel);border:1px solid var(--rule)}
+.strip .fill{position:absolute;left:0;top:0;bottom:0}
+.strip .mark{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink)}
+.strip .cur{position:absolute;top:3px;height:6px;background:var(--slate);opacity:.45}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--muted);margin:6px 0 10px}
+.legend i{display:inline-block;width:12px;height:10px;margin-right:5px;vertical-align:-1px}
+.comp{display:flex;height:22px;border:1px solid var(--rule);margin:6px 0}
+.comp div{height:100%}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.tag{font-size:12px;padding:1px 6px;border:1px solid var(--rule);border-radius:3px;color:var(--slate)}
+.tag.m{border-color:var(--ok);color:var(--ok)} .tag.p{border-color:var(--navy);color:var(--navy)} .tag.j{border-color:var(--near);color:var(--near)} .tag.a{border-color:var(--muted)}
+ol.rank{padding-left:22px;margin:4px 0} ol.rank li{margin:3px 0;font-size:13.5px}
+.method p{max-width:78ch}
+.hidden{display:none}
+@media (max-width:860px){ .wrap{grid-template-columns:1fr} aside{border-right:0;border-bottom:1px solid var(--rule)} .two{grid-template-columns:1fr} .strip{grid-template-columns:120px 1fr 50px} }
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Community Corrections Resource Allocation Tool <span class="sim">Prototype with simulated data</span></h1>
+    <p>Illustrates how the proposed workbook would estimate staffing need for field CCOs and Reentry Centers, compare observed practice with service standards, and allocate funded positions. Office-level data and parameters are simulated; statewide totals are scaled to published figures. Prototype v3, September 2026.</p>
+  </div>
+</header>
+<div class="wrap">
+<aside aria-label="Scenario controls">
+  <h2>Basis for estimates</h2>
+  <div class="seg" role="group" aria-label="Estimate basis">
+    <button id="bObs" aria-pressed="false">Observed practice</button>
+    <button id="bStd" aria-pressed="true">Service standards</button>
+  </div>
+  <p class="note" style="margin:6px 0 0">Observed practice uses measured activity frequencies. Service standards use policy frequencies with the same measured durations.</p>
+
+  <h2>Caseload scenario</h2>
+  <div class="ctl"><label for="growth">Active caseload change <output id="growthO"></output></label><input type="range" id="growth" min="-15" max="20" step="1" value="0"></div>
+  <div class="ctl"><label for="mix">Shift from High Drug to Moderate <output id="mixO"></output></label><input type="range" id="mix" min="0" max="40" step="5" value="0"></div>
+  <p class="note" style="margin-top:-6px">For example, reclassification after vacated drug possession convictions.</p>
+
+  <h2>Policy scenario</h2>
+  <div class="ctl"><label for="hvc">Office contacts per month, HVPD and HV <output id="hvcO"></output></label><input type="range" id="hvc" min="1" max="5" step="0.5" value="3"></div>
+  <div class="ctl"><label for="reas">Community reassessment</label>
+    <select id="reas"><option value="6" selected>Every 6 months</option><option value="12">Every 12 months</option><option value="4">Every 4 months</option></select></div>
+  <div class="ctl"><label class="chk"><input type="checkbox" id="newOn"> Add a mandated activity</label></div>
+  <div id="newBox" class="hidden">
+    <div class="ctl"><label for="newName">Activity</label><input type="text" id="newName" value="Victim notification review"></div>
+    <div class="ctl"><label for="newApp">Applies to</label><select id="newApp"><option value="high">High classifications (HVPD, HV, HP, HD)</option><option value="all">All active cases</option><option value="hv">HVPD and HV only</option></select></div>
+    <div class="ctl"><label for="newFreq">Occurrences per case-month <output id="newFreqO"></output></label><input type="range" id="newFreq" min="0.1" max="2" step="0.1" value="0.5"></div>
+    <div class="ctl"><label for="newMin">Minutes per occurrence <output id="newMinO"></output></label><input type="range" id="newMin" min="5" max="90" step="5" value="20"></div>
+  </div>
+
+  <h2>Funding</h2>
+  <div class="ctl"><label for="pool">Funded CCO positions</label><input type="number" id="pool" min="0" step="1"></div>
+  <div class="ctl"><label for="extra">Additional positions to prioritize</label><input type="number" id="extra" min="0" max="100" step="1" value="20"></div>
+
+  <h2>Positions and cost</h2>
+  <div class="ctl"><label for="vac">Vacancy rate <output id="vacO"></output></label><input type="range" id="vac" min="0" max="25" step="1" value="8"></div>
+  <div class="ctl"><label for="cost">Annual cost per CCO FTE (salary and benefits)</label><input type="number" id="cost" min="0" step="1000" value="115000"></div>
+  <p class="note" style="margin-top:-6px">Placeholder: CCO2 range 57 is $67,320–$90,480 (July 2025); midpoint plus benefits.</p>
+
+  <h2>Compare</h2>
+  <div class="btnrow"><button class="btn primary" id="pin">Save as baseline</button><button class="btn" id="reset">Reset all</button></div>
+  <p class="note" id="pinNote">No baseline saved. Save one to see changes from it.</p>
+</aside>
+
+<main>
+  <nav class="tabs" role="tablist" aria-label="Views">
+    <button role="tab" aria-selected="true" data-tab="sum">Statewide summary</button>
+    <button role="tab" aria-selected="false" data-tab="off">Offices</button>
+    <button role="tab" aria-selected="false" data-tab="alloc">Allocation</button>
+    <button role="tab" aria-selected="false" data-tab="rc">Reentry Centers</button>
+    <button role="tab" aria-selected="false" data-tab="par">Parameters</button>
+    <button role="tab" aria-selected="false" data-tab="meth">How it works</button>
+  </nav>
+
+  <section id="t-sum" role="tabpanel">
+    <div class="headline" id="head"></div>
+    <h3>Positions needed, funded, and filled</h3>
+    <p class="note">Funded positions are what the budget provides; filled positions are what is actually available after vacancies. Cost is the annual salary and benefits for the positions that would close each gap.</p>
+    <div class="scroll"><table id="posT"></table></div>
+    <div class="two">
+      <div>
+        <h3>Percent of need funded, by office</h3>
+        <div class="legend"><span><i style="background:var(--under)"></i>Below 85%</span><span><i style="background:var(--near)"></i>85–99%</span><span><i style="background:var(--ok)"></i>100% or more</span><span><i style="background:var(--ink);width:2px"></i>100% of need</span></div>
+        <div class="strip" id="strip"></div>
+      </div>
+      <div>
+        <h3>Where the work comes from</h3>
+        <div class="comp" id="comp"></div>
+        <div class="legend" id="compLeg"></div>
+        <h3>By region</h3>
+        <div class="scroll"><table id="regT"></table></div>
+        <h3>Case-month weights in use</h3>
+        <p class="note">Minutes per active case per month, by Washington ONE classification.</p>
+        <div class="scroll"><table id="wT"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="t-off" role="tabpanel" class="hidden">
+    <p class="note">Select a column heading to sort. Need is workload-driven FTE compared with the office coverage floor. Current funded is the simulated present distribution of positions.</p>
+    <div class="scroll"><table id="offT"></table></div>
+  </section>
+
+  <section id="t-alloc" role="tabpanel" class="hidden">
+    <p class="note">The allocation meets every coverage floor first, then assigns each remaining funded position, one at a time, to the office furthest below its need. Grey ticks show current funding; colored bars show the allocation.</p>
+    <div class="two">
+      <div><h3>Allocation of funded positions</h3><div class="strip" id="strip2"></div></div>
+      <div>
+        <h3>Largest changes from current funding</h3><div class="scroll"><table id="chgT"></table></div>
+        <h3 id="extraH">Priority for additional positions</h3>
+        <p class="note">If funding grows, positions would go to these offices in this order.</p>
+        <ul class="rank" id="rank" style="list-style:none;padding-left:0"></ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="t-rc" role="tabpanel" class="hidden">
+    <p class="note">Reentry Centers combine facility coverage with case management. Coverage posts must be staffed regardless of census, so post requirements are converted to FTE with a relief factor. Resident-driven work is estimated from resident-months and admissions. The first three centers use the bed counts in DOC's 2025–27 budget overview for facilities converted to state operation; occupancy, posts, and staffing are simulated, and the remaining centers are illustrative.</p>
+    <div class="headline" id="rcHead"></div>
+    <div class="two">
+      <div>
+        <h3>Coverage and case work by center</h3>
+        <div class="scroll"><table id="rcT"></table></div>
+      </div>
+      <div>
+        <h3>Reentry Center parameters</h3>
+        <div class="scroll"><table id="rcP"></table></div>
+        <p class="note">Relief factor = hours a post must be staffed per year ÷ available work hours per FTE. A 24-hour post needs 8,760 hours; a weekday day post needs about 2,080.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="t-par" role="tabpanel" class="hidden">
+    <p class="note">Every value can be edited; estimates update immediately. Source shows where each value would come from in the study: measured (time study), policy (DOC standards), analog (a comparable measured activity), or judgment (review panels).</p>
+    <h3>Recurring case work: occurrences per case-month</h3>
+    <div class="scroll"><table id="freqT"></table></div>
+    <h3>Discrete events</h3>
+    <div class="scroll"><table id="evT"></table></div>
+    <h3>Available work time and organizational work</h3>
+    <div class="scroll"><table id="timeT"></table></div>
+  </section>
+
+  <section id="t-meth" role="tabpanel" class="hidden method">
+    <h3>What the tool calculates</h3>
+    <p>For each office, annual workload is the sum of three parts. Recurring case work is active case-months per year multiplied by minutes per case-month for each Washington ONE classification, plus a smaller weight for inactive-status cases. Discrete events (intakes, violations, reports, arrests, release plans, transfers) are annual volumes multiplied by minutes per event, including travel. Organizational work is a fixed amount per office plus an amount per FTE.</p>
+    <p>Workload is divided by available work minutes per FTE per year, net of leave, holidays, and mandatory training. Because organizational work per FTE grows with staffing, it is subtracted from available time rather than added as workload. The result is compared with the office coverage floor; the larger number is the staffing need.</p>
+    <h3>Rules that prevent double counting</h3>
+    <p>Case-month weights exclude activities modeled as events. Coverage floors are applied as a minimum, never added on top of counted work. Leave and training reduce available time and are not also counted as workload. All parts use one annual basis.</p>
+    <h3>How case-month weights are built</h3>
+    <p>Each weight is the sum, across activity families, of occurrences per case-month multiplied by minutes per occurrence. Field contacts add office-specific travel time. Changing a contact standard changes only the frequency; measured durations carry forward. Classifications are treated as separate groups, not a ranked scale, because the Washington ONE assigns them hierarchically from separate offense-specific scales.</p>
+    <h3>Reentry Centers</h3>
+    <p>Each center's need is the sum of coverage posts converted to FTE (post hours per year divided by available hours per FTE) and resident-driven case work (resident-months multiplied by minutes per resident-month, plus admissions multiplied by minutes for intake, PREA screening, and release planning), divided by available work minutes. Posts are a floor that does not fall with census; case work rises and falls with residents.</p>
+    <h3>Positions and cost</h3>
+    <p>Funded positions come from the budget. Filled positions apply a vacancy rate to funded positions and represent staff actually available. The tool reports both gaps against need and prices them at an annual cost per FTE, so the Legislature can see the cost of funding to need and the Department can see the effect of vacancies separately from funding.</p>
+    <h3>What is simulated here</h3>
+    <p>Statewide totals are scaled to public figures: about 13,800 individuals on active supervision (DOC caseload report, August 2026), about 15,000 inactive-status cases (the RFP), and about 626 funded CCO positions (the 2023 workload assessment). The cost reference of $6,072 per active ADP is DOC's standard fiscal-note assumption from its existing supervision workload model, which includes Hearings, Records, and Training. All offices, caseloads, classification mixes, funded positions, and parameter values are invented for demonstration. In the study, caseloads and events would come from OMNI, durations from the time study, frequencies from OMNI and DOC policy, and floors from the design council. Support units (Records, Hearings, CRU, CVL, LRA) would appear as further components with their own demand units.</p>
+  </section>
+</main>
+</div>
+
+<script>
+(function(){
+"use strict";
+const RLC=["HVPD","HV","HP","HD","MOD","LOW","OTHER"];
+const RLCNAME={HVPD:"High violent, property & drug",HV:"High violent",HP:"High property",HD:"High drug",MOD:"Moderate",LOW:"Low",OTHER:"Other / unclassified"};
+
+// ---------- simulated offices ----------
+function rng(seed){let s=seed>>>0;return()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
+const R=rng(20261028);
+const OFF=[
+ ["East","Spokane","Urban",980],["East","Spokane Valley","Suburban",520],["East","Yakima","Urban",760],["East","Kennewick","Suburban",690],["East","Wenatchee","Rural",340],["East","Walla Walla","Rural",260],["East","Moses Lake","Rural",300],["East","Colville","Rural",140],
+ ["Northwest","Seattle Central","Urban",1150],["Northwest","Seattle South","Urban",900],["Northwest","Everett","Urban",870],["Northwest","Lynnwood","Suburban",540],["Northwest","Bellingham","Suburban",430],["Northwest","Mount Vernon","Rural",360],["Northwest","Port Angeles","Rural",190],
+ ["Southwest","Tacoma","Urban",1180],["Southwest","Lakewood","Suburban",610],["Southwest","Olympia","Suburban",560],["Southwest","Vancouver","Urban",880],["Southwest","Bremerton","Suburban",470],["Southwest","Longview","Rural",330],["Southwest","Aberdeen","Rural",260],["Southwest","Shelton","Rural",150]
+];
+const BASEMIX=[.14,.20,.15,.08,.12,.23,.08];
+const TRAVEL={Urban:20,Suburban:35,Rural:60};
+const FUNDF=0.86; // calibrated so simulated funded CCO positions total about the 626 funded in 2023-25
+const SCALE=13817/12870; // scale simulated offices to the August 2026 active caseload (DOC report 400-RE001)
+const INACT=15000/12870;   // inactive-status cases: about 15,000 per the RFP
+const offices=OFF.map((o,i)=>{
+  const mix=BASEMIX.map(v=>v*(0.75+R()*0.5)); const t=mix.reduce((a,b)=>a+b,0);
+  const cases=RLC.map((r,k)=>Math.round(o[3]*SCALE*mix[k]/t));
+  return {id:i,region:o[0],name:o[1],setting:o[2],cases,inactive:Math.round(o[3]*INACT*(0.85+R()*0.3)),
+    travel:TRAVEL[o[2]]*(0.85+R()*0.3),floor:o[2]==="Rural"?3:2,fundFactor:FUNDF*(0.92+R()*0.16)};
+});
+
+// ---------- parameters ----------
+const ACT=[
+ {k:"office",n:"Office and virtual contacts",min:40,field:false,src:"m",
+   std:{HVPD:3,HV:3,HP:2,HD:2,MOD:1.5,LOW:0.5,OTHER:2}, obs:0.9},
+ {k:"fieldc",n:"Field and home contacts",min:60,field:true,src:"m",
+   std:{HVPD:1,HV:1,HP:0.5,HD:0.5,MOD:0.33,LOW:0.1,OTHER:0.5}, obs:0.8},
+ {k:"ebp",n:"Behavior change (iCOACH)",min:35,field:false,src:"m",
+   std:{HVPD:2,HV:2,HP:1.5,HD:1.5,MOD:1,LOW:0.25,OTHER:1}, obs:0.75},
+ {k:"plan",n:"Case planning and review",min:30,field:false,src:"p",
+   std:{HVPD:1,HV:1,HP:1,HD:1,MOD:1,LOW:0.5,OTHER:1}, obs:0.85},
+ {k:"comp",n:"Compliance verification",min:20,field:false,src:"m",
+   std:{HVPD:1.5,HV:1,HP:1,HD:2,MOD:0.75,LOW:0.2,OTHER:1}, obs:0.95},
+ {k:"coord",n:"Service coordination",min:30,field:false,src:"m",
+   std:{HVPD:1.5,HV:1.2,HP:1,HD:1.2,MOD:0.8,LOW:0.3,OTHER:1}, obs:0.8},
+ {k:"doc",n:"Documentation and consultation",min:50,field:false,src:"m",
+   std:{HVPD:1.2,HV:1.1,HP:1,HD:1,MOD:0.9,LOW:0.6,OTHER:1}, obs:1.05},
+ {k:"reas",n:"Washington ONE reassessment",min:60,field:false,src:"p",
+   std:null, obs:0.5}
+];
+const EVENTS=[
+ {k:"intake",n:"Intake and initial assessment",rate:0.9,min:120,src:"m"},
+ {k:"viol",n:"Violation process",rate:0.6,min:180,src:"m"},
+ {k:"psi",n:"PSIs and risk assessment reports",rate:0.03,min:360,src:"a"},
+ {k:"arrest",n:"Arrest and transport",rate:0.1,min:150,src:"m"},
+ {k:"release",n:"Release plan investigation",rate:0.5,min:90,src:"m"},
+ {k:"transfer",n:"Transfers and interstate",rate:0.15,min:45,src:"j"}
+];
+const TIME={paid:2080,leave:180,holidays:88,training:40,orgPerFTE:200,orgPerOffice:300,inactiveMin:15,stageShare:0.22,stageMin:360,stageObs:0.85};
+const RCP={resMin:200,intakeMin:150,releaseMin:90,infrRate:0.4,infrMin:45,post24:8760,postDay:2080};
+const RC=[["6th Ave Reentry (Progress House), Tacoma","Southwest",90],["Brownstone, Spokane","East",84],["Eleanor Chase (women), Spokane","East",55],["Illustrative center, Northwest","Northwest",70],["Illustrative center, Southwest","Southwest",50]].map((c,i)=>({name:c[0],region:c[1],beds:c[2],occ:0.8+R()*0.15,post24:c[2]>=70?2:1,postDay:1,los:120+R()*60,fundFactor:0.8+R()*0.15}));
+const DEF=JSON.parse(JSON.stringify({ACT,EVENTS,TIME}));
+
+// ---------- state ----------
+const S={vac:8,cost:115000,basis:"std",growth:0,mix:0,hvc:3,reas:6,newOn:false,newName:"Victim notification review",newApp:"high",newFreq:0.5,newMin:20,pool:null,extra:20,tab:"sum",sort:{k:"pct",dir:1},baseline:null};
+
+function freq(a,r){
+  if(a.k==="reas") return 1/S.reas*(S.basis==="obs"?a.obs:1);
+  let f=a.std[r];
+  if(a.k==="office"&&(r==="HVPD"||r==="HV")) f=S.hvc;
+  return S.basis==="obs"? f*a.obs : f;
+}
+function newApplies(r){ if(!S.newOn) return false; if(S.newApp==="all") return true; if(S.newApp==="hv") return r==="HVPD"||r==="HV"; return ["HVPD","HV","HP","HD"].includes(r); }
+function weight(r,travel){
+  let w=0; for(const a of ACT){ w+=freq(a,r)*(a.min+(a.field?travel:0)); }
+  if(r!=="LOW") w+=TIME.stageShare*TIME.stageMin*(S.basis==="obs"?TIME.stageObs:1); // days 1–90 intensive supervision add-on
+  if(newApplies(r)) w+=S.newFreq*S.newMin;
+  return w;
+}
+function officeCases(o){
+  const g=1+S.growth/100; const c=o.cases.map(v=>v*g);
+  const moved=c[3]*S.mix/100; c[3]-=moved; c[4]+=moved; return c;
+}
+function availMin(){ return (TIME.paid-TIME.leave-TIME.holidays-TIME.training)*60; }
+
+function compute(){
+  const A=availMin(); const netA=A-TIME.orgPerFTE*60;
+  const res=offices.map(o=>{
+    const c=officeCases(o); const active=c.reduce((a,b)=>a+b,0);
+    let caseMin=0; RLC.forEach((r,k)=>{caseMin+=c[k]*12*weight(r,o.travel);});
+    caseMin+=o.inactive*(1+S.growth/100)*12*TIME.inactiveMin;
+    let evMin=0; for(const e of EVENTS){ const tr=(e.k==="arrest"||e.k==="release")?o.travel:0; evMin+=active*e.rate*(e.min+tr); }
+    const orgOffice=TIME.orgPerOffice*60;
+    const wl=(caseMin+evMin+orgOffice)/netA;
+    const need=Math.max(wl,o.floor);
+    const orgFTE=need*TIME.orgPerFTE*60;
+    return {o,active,caseMin,evMin,orgMin:orgOffice+orgFTE,wl,need,floorBinds:o.floor>wl};
+  });
+  // current funded (simulated, fixed): based on standards need at baseline params
+  return res;
+}
+function computeRC(){
+  const availH=TIME.paid-TIME.leave-TIME.holidays-TIME.training; const A=availH*60;
+  return RC.map(c=>{
+    const res=c.beds*c.occ; const adm=res*365/c.los;
+    const postFTE=(c.post24*RCP.post24+c.postDay*RCP.postDay)/availH;
+    const caseMin=res*12*RCP.resMin+adm*(RCP.intakeMin+RCP.releaseMin)+res*RCP.infrRate*12*RCP.infrMin;
+    const caseFTE=caseMin/(A-TIME.orgPerFTE*60);
+    return {c,res,adm,postFTE,caseFTE,need:postFTE+caseFTE};
+  });
+}
+let RCCUR=null;
+// fixed current funding from default params (computed once)
+let CURRENT=null;
+function initCurrent(){
+  const save={...S}; S.basis="std";S.growth=0;S.mix=0;S.hvc=3;S.reas=6;S.newOn=false;
+  const r=compute(); CURRENT=r.map(x=>Math.max(x.o.floor,Math.round(x.need*x.o.fundFactor)));
+  RCCUR=computeRC().map(x=>Math.round(x.need*x.c.fundFactor));
+  Object.assign(S,save);
+}
+function allocate(res,pool){
+  const n=res.length; const al=res.map(x=>x.o.floor); let left=pool-al.reduce((a,b)=>a+b,0);
+  if(left<0) return {al,short:-left};
+  while(left>0){ let bi=0,bv=Infinity; for(let i=0;i<n;i++){const v=al[i]/res[i].need; if(v<bv){bv=v;bi=i;}} al[bi]++; left--; }
+  return {al,short:0};
+}
+function nextPositions(res,al,k){
+  const a=al.slice(); const order=[];
+  for(let j=0;j<k;j++){ let bi=0,bv=Infinity; for(let i=0;i<a.length;i++){const v=a[i]/res[i].need; if(v<bv){bv=v;bi=i;}} a[bi]++; order.push(bi); }
+  return order;
+}
+
+// ---------- rendering ----------
+const $=id=>document.getElementById(id);
+const fmt=(v,d=0)=>v.toLocaleString("en-US",{maximumFractionDigits:d,minimumFractionDigits:d});
+const cls=p=>p<0.85?"c-under":p<1?"c-near":"c-ok";
+const col=p=>p<0.85?"var(--under)":p<1?"var(--near)":"var(--ok)";
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function render(){
+  const res=compute();
+  const totNeed=res.reduce((a,x)=>a+x.need,0);
+  const totCur=CURRENT.reduce((a,b)=>a+b,0);
+  if(S.pool===null){S.pool=totCur; $("pool").value=totCur;}
+  const {al,short}=allocate(res,S.pool);
+  const active=res.reduce((a,x)=>a+x.active,0);
+  const B=S.baseline;
+  const dlt=(v,b,d=0,inv=false)=>{ if(b==null) return ""; const x=v-b; if(Math.abs(x)<(d?0.05:0.5)) return ""; const up=x>0; return `<span class="delta ${(up!==inv)?"up":"down"}">${up?"+":"−"}${fmt(Math.abs(x),d)}</span>`; };
+  $("head").innerHTML=
+   `<div><b>${fmt(active)}</b><span>Active cases${dlt(active,B&&B.active)}</span></div>`+
+   `<div><b>${fmt(totNeed)}</b><span>CCO FTE needed${dlt(totNeed,B&&B.need)}</span></div>`+
+   `<div><b>${fmt(S.pool)}</b><span>Funded CCO positions</span></div>`+
+   `<div><b class="${cls(S.pool/totNeed)}">${fmt(100*S.pool/totNeed)}%</b><span>of need funded statewide</span></div>`+
+   `<div><b>${fmt(Math.max(0,totNeed-S.pool))}</b><span>Positions short of need${dlt(Math.max(0,totNeed-S.pool),B&&B.gap)}</span></div>`;
+  // strip (current funding)
+  const byReg={}; res.forEach((x,i)=>{(byReg[x.o.region]=byReg[x.o.region]||[]).push(i);});
+  const maxP=1.4;
+  function strip(el,useAlloc){
+    let h=""; for(const reg of Object.keys(byReg)){
+      h+=`<div style="grid-column:1/-1;font-weight:600;color:var(--navy);margin-top:8px">${reg} region</div>`;
+      for(const i of byReg[reg]){ const x=res[i]; const f=useAlloc?al[i]:CURRENT[i]; const p=f/x.need; const w=Math.min(p,maxP)/maxP*100;
+        const cur=useAlloc?`<div class="cur" style="left:${Math.min(CURRENT[i]/x.need,maxP)/maxP*100}%;width:3px;opacity:.9;top:-3px;height:20px"></div>`:"";
+        h+=`<div>${esc(x.o.name)}</div><div class="bar" title="${esc(x.o.name)}: ${fmt(f)} of ${fmt(x.need,1)} FTE"><div class="fill" style="width:${w}%;background:${col(p)}"></div><div class="mark" style="left:${100/maxP}%"></div>${cur}</div><div class="pct ${cls(p)}">${fmt(100*p)}%</div>`; }
+    } el.innerHTML=h; }
+  strip($("strip"),false); strip($("strip2"),true);
+  // composition
+  const cm=res.reduce((a,x)=>a+x.caseMin,0), em=res.reduce((a,x)=>a+x.evMin,0), om=res.reduce((a,x)=>a+x.orgMin,0), tm=cm+em+om;
+  const parts=[["Recurring case work",cm,"var(--navy)"],["Discrete events",em,"var(--ok)"],["Organizational work",om,"var(--muted)"]];
+  $("comp").innerHTML=parts.map(p=>`<div style="width:${100*p[1]/tm}%;background:${p[2]}" title="${p[0]}"></div>`).join("");
+  $("compLeg").innerHTML=parts.map(p=>`<span><i style="background:${p[2]}"></i>${p[0]} ${fmt(100*p[1]/tm)}%</span>`).join("");
+  // region table
+  let rt=`<tr><th class="l">Region</th><th>Active cases</th><th>FTE need</th><th>Current funded</th><th>% of need</th></tr>`;
+  for(const reg of Object.keys(byReg)){ const ids=byReg[reg]; const n=ids.reduce((a,i)=>a+res[i].need,0), c=ids.reduce((a,i)=>a+CURRENT[i],0), ac=ids.reduce((a,i)=>a+res[i].active,0);
+    rt+=`<tr><td>${reg}</td><td>${fmt(ac)}</td><td>${fmt(n,1)}</td><td>${fmt(c)}</td><td class="pct ${cls(c/n)}">${fmt(100*c/n)}%</td></tr>`; }
+  $("regT").innerHTML=rt;
+  // weights table (at median travel)
+  let wt=`<tr><th class="l">Classification</th><th>Urban office</th><th>Rural office</th></tr>`;
+  RLC.forEach(r=>{wt+=`<tr><td class="l" title="${RLCNAME[r]}">${r}</td><td>${fmt(weight(r,20))}</td><td>${fmt(weight(r,60))}</td></tr>`;});
+  $("wT").innerHTML=wt;
+  // offices table
+  const rows=res.map((x,i)=>({i,name:x.o.name,region:x.o.region,setting:x.o.setting,active:x.active,wl:x.wl,floor:x.o.floor,need:x.need,cur:CURRENT[i],pct:CURRENT[i]/x.need,alloc:al[i],chg:al[i]-CURRENT[i],fb:x.floorBinds}));
+  const k=S.sort.k,d=S.sort.dir; rows.sort((a,b)=>(typeof a[k]==="string"?a[k].localeCompare(b[k]):a[k]-b[k])*d);
+  const H=[["name","Office","l"],["region","Region","l"],["setting","Setting","l"],["active","Active cases"],["wl","Workload FTE"],["floor","Floor"],["need","Need"],["cur","Current funded"],["pct","% of need"],["alloc","Allocated"],["chg","Change"]];
+  let ot="<tr>"+H.map(h=>`<th class="${h[2]||""}" data-k="${h[0]}" tabindex="0" aria-sort="${k===h[0]?(d>0?"ascending":"descending"):"none"}">${h[1]}${k===h[0]?(d>0?" ▲":" ▼"):""}</th>`).join("")+"</tr>";
+  for(const r of rows){ ot+=`<tr><td>${esc(r.name)}</td><td class="l">${r.region}</td><td class="l">${r.setting}</td><td>${fmt(r.active)}</td><td>${fmt(r.wl,1)}</td><td>${r.floor}${r.fb?" *":""}</td><td>${fmt(r.need,1)}</td><td>${r.cur}</td><td class="pct ${cls(r.pct)}">${fmt(100*r.pct)}%</td><td>${r.alloc}</td><td>${r.chg>0?"+":""}${r.chg}</td></tr>`; }
+  ot+=`<tr class="region"><td>Statewide</td><td></td><td></td><td>${fmt(active)}</td><td>${fmt(res.reduce((a,x)=>a+x.wl,0),1)}</td><td></td><td>${fmt(totNeed,1)}</td><td>${totCur}</td><td>${fmt(100*totCur/totNeed)}%</td><td>${al.reduce((a,b)=>a+b,0)}</td><td></td></tr>`;
+  $("offT").innerHTML=ot;
+  $("offT").querySelectorAll("th").forEach(th=>{const go=()=>{const kk=th.dataset.k; if(S.sort.k===kk) S.sort.dir*=-1; else {S.sort.k=kk;S.sort.dir=1;} render();}; th.onclick=go; th.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go();}};});
+  // changes
+  const ch=rows.slice().sort((a,b)=>Math.abs(b.chg)-Math.abs(a.chg)).filter(r=>r.chg!==0).slice(0,10);
+  $("chgT").innerHTML=`<tr><th class="l">Office</th><th>Current</th><th>Allocated</th><th>Change</th></tr>`+(ch.length?ch.map(r=>`<tr><td>${esc(r.name)}</td><td>${r.cur}</td><td>${r.alloc}</td><td>${r.chg>0?"+":""}${r.chg}</td></tr>`).join(""):`<tr><td colspan="4" class="l">The allocation matches current funding.</td></tr>`)+(short?`<tr><td colspan="4" class="l c-under">Funded positions are ${short} short of the combined coverage floors.</td></tr>`:"");
+  const nx=nextPositions(res,al,S.extra); const cnt={}; nx.forEach((i,j)=>{cnt[i]=cnt[i]||{n:0,first:j+1};cnt[i].n++;});
+  $("extraH").textContent=`Priority for ${S.extra} additional positions`;
+  $("rank").innerHTML=S.extra>0?Object.entries(cnt).sort((a,b)=>a[1].first-b[1].first).map(([i,v])=>`<li>${esc(res[i].o.name)}: ${v.n} position${v.n>1?"s":""} (first at #${v.first})</li>`).join(""):"<li>Enter a number of additional positions to see priorities.</li>";
+  // positions and cost
+  const filled=S.pool*(1-S.vac/100); const money=v=>"$"+fmt(v/1e6,1)+" M";
+  const gapF=Math.max(0,totNeed-S.pool), gapA=Math.max(0,totNeed-filled);
+  $("posT").innerHTML=`<tr><th class="l">Measure</th><th>Positions</th><th>% of need</th><th>Gap to need</th><th>Annual cost to close gap</th></tr>
+   <tr><td>FTE need (${S.basis==="obs"?"observed practice":"service standards"})</td><td>${fmt(totNeed,1)}</td><td>100%</td><td></td><td></td></tr>
+   <tr><td>Funded positions</td><td>${fmt(S.pool)}</td><td class="pct ${cls(S.pool/totNeed)}">${fmt(100*S.pool/totNeed)}%</td><td>${fmt(gapF,1)}</td><td>${money(gapF*S.cost)}</td></tr>
+   <tr><td>Filled positions (${S.vac}% vacant)</td><td>${fmt(filled,1)}</td><td class="pct ${cls(filled/totNeed)}">${fmt(100*filled/totNeed)}%</td><td>${fmt(gapA,1)}</td><td>${money(gapA*S.cost)}</td></tr>
+   <tr><td>Reference: DOC fiscal-note rate, $6,072 per active ADP per year (includes Hearings, Records, Training)</td><td></td><td></td><td></td><td>${money(active*6072)} for ${fmt(active)} active</td></tr>
+   <tr><td>This model: cost of funded CCO positions per active ADP</td><td></td><td></td><td></td><td>$${fmt(S.pool*S.cost/active)} per ADP</td></tr>
+   <tr><td class="l note" colspan="5">Of the ${fmt(gapA,1)} FTE shortfall against filled staff, ${fmt(Math.min(gapA,S.pool*S.vac/100),1)} FTE is vacancy in funded positions and ${fmt(gapF,1)} FTE is unfunded need.${B?` Compared with the baseline, need changed by ${totNeed-B.need>=0?"+":"−"}${fmt(Math.abs(totNeed-B.need),1)} FTE, about ${money(Math.abs(totNeed-B.need)*S.cost)} per year.`:""}</td></tr>`;
+  renderRC();
+  renderParams();
+  S._last={active,need:totNeed,gap:Math.max(0,totNeed-S.pool)};
+}
+
+function renderRC(){
+  const r=computeRC(); const need=r.reduce((a,x)=>a+x.need,0), cur=RCCUR.reduce((a,b)=>a+b,0), filled=cur*(1-S.vac/100);
+  $("rcHead").innerHTML=`<div><b>${fmt(r.reduce((a,x)=>a+x.res,0))}</b><span>Average residents</span></div><div><b>${fmt(need,1)}</b><span>Reentry CCO FTE needed</span></div><div><b>${fmt(cur)}</b><span>Funded positions</span></div><div><b class="${cls(cur/need)}">${fmt(100*cur/need)}%</b><span>of need funded</span></div><div><b>$${fmt(Math.max(0,need-filled)*S.cost/1e6,1)} M</b><span>Annual cost to staff to need from filled</span></div>`;
+  let t=`<tr><th class="l">Center</th><th class="l">Region</th><th>Beds</th><th>Avg residents</th><th>24-hr posts</th><th>Post FTE</th><th>Case work FTE</th><th>Need</th><th>Funded</th><th>% of need</th></tr>`;
+  r.forEach((x,i)=>{t+=`<tr><td>${esc(x.c.name)}</td><td class="l">${x.c.region}</td><td>${x.c.beds}</td><td>${fmt(x.res)}</td><td>${x.c.post24}</td><td>${fmt(x.postFTE,1)}</td><td>${fmt(x.caseFTE,1)}</td><td>${fmt(x.need,1)}</td><td>${RCCUR[i]}</td><td class="pct ${cls(RCCUR[i]/x.need)}">${fmt(100*RCCUR[i]/x.need)}%</td></tr>`;});
+  t+=`<tr class="region"><td>All centers</td><td></td><td>${RC.reduce((a,c)=>a+c.beds,0)}</td><td>${fmt(r.reduce((a,x)=>a+x.res,0))}</td><td></td><td>${fmt(r.reduce((a,x)=>a+x.postFTE,0),1)}</td><td>${fmt(r.reduce((a,x)=>a+x.caseFTE,0),1)}</td><td>${fmt(need,1)}</td><td>${cur}</td><td>${fmt(100*cur/need)}%</td></tr>`;
+  $("rcT").innerHTML=t;
+  if(!$("rcP").innerHTML){
+    const P=[["resMin","Case management minutes per resident-month","m"],["intakeMin","Intake, PREA screening, orientation: minutes per admission","m"],["releaseMin","Release planning: minutes per admission","m"],["infrRate","Infractions per resident-month","m"],["infrMin","Minutes per infraction","m"],["post24","Hours per 24-hour post per year","p"],["postDay","Hours per weekday day post per year","p"]];
+    $("rcP").innerHTML=`<tr><th class="l">Item</th><th>Value</th><th class="l">Source</th></tr>`+P.map(p=>`<tr><td>${p[1]}</td><td><input type="number" step="any" min="0" value="${RCP[p[0]]}" data-rc="${p[0]}" aria-label="${p[1]}"></td><td class="l">${tag(p[2])}</td></tr>`).join("");
+    document.querySelectorAll("#rcP input").forEach(inp=>inp.addEventListener("input",()=>{const v=parseFloat(inp.value); if(isFinite(v)&&v>=0){RCP[inp.dataset.rc]=v; render();}}));
+  }
+}
+function tag(s){const m={m:["m","Measured"],p:["p","Policy"],a:["a","Analog"],j:["j","Judgment"]}[s]; return `<span class="tag ${m[0]}">${m[1]}</span>`;}
+let paramsBuilt=false;
+function renderParams(){
+  if(paramsBuilt){ // refresh derived cells only
+    document.querySelectorAll("[data-reasrow]").forEach(td=>{td.textContent=fmt(1/S.reas,2);});
+    document.querySelectorAll("[data-hvc]").forEach(td=>{td.textContent=S.hvc;});
+    return; }
+  paramsBuilt=true;
+  let h=`<tr><th class="l">Activity family</th>${RLC.map(r=>`<th title="${RLCNAME[r]}">${r}</th>`).join("")}<th>Minutes</th><th>Observed ÷ standard</th><th class="l">Source</th></tr>`;
+  ACT.forEach((a,ai)=>{ h+=`<tr><td>${a.n}${a.field?" (+ travel)":""}</td>`;
+    RLC.forEach(r=>{ if(a.k==="reas") h+=`<td data-reasrow="${r}">${fmt(1/S.reas,2)}</td>`; else if(a.k==="office"&&(r==="HVPD"||r==="HV")) h+=`<td data-hvc="1" title="Set by the contact standard control">${S.hvc}</td>`; else h+=`<td><input type="number" step="0.05" min="0" value="${a.std[r]}" data-a="${ai}" data-r="${r}" aria-label="${a.n}, ${r}, occurrences per case-month"></td>`; });
+    h+=`<td><input type="number" step="1" min="0" value="${a.min}" data-a="${ai}" data-f="min" aria-label="${a.n}, minutes"></td><td><input type="number" step="0.05" min="0" value="${a.obs}" data-a="${ai}" data-f="obs" aria-label="${a.n}, observed ratio"></td><td class="l">${tag(a.src)}</td></tr>`; });
+  $("freqT").innerHTML=h+`<tr><td colspan="${RLC.length+4}" class="l note">Reassessment frequency follows the policy control in the side panel. HVPD and HV office contacts follow the contact standard slider.</td></tr>`;
+  let e=`<tr><th class="l">Event</th><th>Per active case per year</th><th>Minutes per event</th><th class="l">Source</th></tr>`;
+  EVENTS.forEach((v,i)=>{e+=`<tr><td>${v.n}</td><td><input type="number" step="0.01" min="0" value="${v.rate}" data-e="${i}" data-f="rate" aria-label="${v.n} rate"></td><td><input type="number" step="5" min="0" value="${v.min}" data-e="${i}" data-f="min" aria-label="${v.n} minutes"></td><td class="l">${tag(v.src)}</td></tr>`;});
+  $("evT").innerHTML=e;
+  const TL=[["paid","Paid hours per FTE per year","p"],["leave","Leave hours","m"],["holidays","Holiday hours","p"],["training","Mandatory training hours","p"],["orgPerFTE","Organizational work, hours per FTE","m"],["orgPerOffice","Organizational work, hours per office","m"],["inactiveMin","Inactive case, minutes per case-month","m"],["stageShare","Share of case-months in days 1–90 of supervision","m"],["stageMin","Days 1–90 add-on, minutes per case-month (daily contact, 90-day plan)","p"],["stageObs","Days 1–90 add-on, observed ÷ standard","m"]];
+  $("timeT").innerHTML=`<tr><th class="l">Item</th><th>Value</th><th class="l">Source</th></tr>`+TL.map(t=>`<tr><td>${t[1]}</td><td><input type="number" step="1" min="0" value="${TIME[t[0]]}" data-t="${t[0]}" aria-label="${t[1]}"></td><td class="l">${tag(t[2])}</td></tr>`).join("");
+  document.querySelectorAll("#t-par input").forEach(inp=>inp.addEventListener("input",()=>{
+    const v=parseFloat(inp.value); if(!isFinite(v)||v<0) return;
+    if(inp.dataset.t){TIME[inp.dataset.t]=v;}
+    else if(inp.dataset.e){EVENTS[+inp.dataset.e][inp.dataset.f]=v;}
+    else if(inp.dataset.r){ACT[+inp.dataset.a].std[inp.dataset.r]=v;}
+    else if(inp.dataset.f){ACT[+inp.dataset.a][inp.dataset.f]=v;}
+    render();
+  }));
+}
+
+// ---------- controls ----------
+function bindRange(id,key,fmtFn){const el=$(id),o=$(id+"O");const up=()=>{S[key]=parseFloat(el.value);if(o)o.textContent=fmtFn(S[key]);render();};el.addEventListener("input",up);if(o)o.textContent=fmtFn(parseFloat(el.value));}
+bindRange("growth","growth",v=>(v>0?"+":"")+v+"%");
+bindRange("mix","mix",v=>v+"% of HD");
+bindRange("hvc","hvc",v=>v+" per month");
+bindRange("newFreq","newFreq",v=>v.toFixed(1));
+bindRange("newMin","newMin",v=>v+" min");
+$("reas").onchange=e=>{S.reas=+e.target.value;render();};
+bindRange("vac","vac",v=>v+"%");
+$("cost").oninput=e=>{const v=parseFloat(e.target.value);if(isFinite(v)&&v>=0){S.cost=v;render();}};
+$("newOn").onchange=e=>{S.newOn=e.target.checked;$("newBox").classList.toggle("hidden",!S.newOn);render();};
+$("newApp").onchange=e=>{S.newApp=e.target.value;render();};
+$("newName").oninput=e=>{S.newName=e.target.value;};
+$("pool").oninput=e=>{const v=parseInt(e.target.value,10);if(isFinite(v)&&v>=0){S.pool=v;render();}};
+$("extra").oninput=e=>{const v=parseInt(e.target.value,10);if(isFinite(v)&&v>=0&&v<=100){S.extra=v;render();}};
+function setBasis(b){S.basis=b;$("bObs").setAttribute("aria-pressed",b==="obs");$("bStd").setAttribute("aria-pressed",b==="std");render();}
+$("bObs").onclick=()=>setBasis("obs"); $("bStd").onclick=()=>setBasis("std");
+$("pin").onclick=()=>{S.baseline={...S._last};$("pinNote").textContent="Baseline saved. Headline figures now show changes from it.";render();};
+$("reset").onclick=()=>{location.reload();};
+document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("nav.tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));
+  document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));
+  $("t-"+b.dataset.tab).classList.remove("hidden");
+});
+initCurrent(); render();
+})();
+</script>
+</body>
+</html>

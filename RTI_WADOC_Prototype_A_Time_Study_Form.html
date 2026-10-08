@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RTI Prototype A – Time-Study Entry Form and Daily Log (WADOC Workload Study)</title>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EEF1F5;--panel:#fff;--panel-2:#F2F5F8;--ink:#1B2530;--ink-2:#4A5866;--ink-3:#7A8794;--line:#D6DDE5;
+ --pri:#2C5F8F;--pri-soft:#DCE8F3;--warn:#8A6A2E;--warn-soft:#F0EBE0;--red:#9C4646;
+ --hvpd:#1E3A5C;--hv:#2C5F8F;--hp:#4A7CA6;--hd:#5F8DB0;--mod:#6E8291;--low:#8E9BA7;--unc:#A9B1B9;
+ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#131920;--panel:#1B232C;--panel-2:#232D38;--ink:#E6EBF0;--ink-2:#B3BEC9;--ink-3:#7F8B97;--line:#2F3B48;--pri:#7FA9D1;--pri-soft:#22364A;--warn:#C9B27F;--warn-soft:#332E22;--red:#D68A8A;}}
+:root[data-theme="dark"]{--bg:#131920;--panel:#1B232C;--panel-2:#232D38;--ink:#E6EBF0;--ink-2:#B3BEC9;--ink-3:#7F8B97;--line:#2F3B48;--pri:#7FA9D1;--pri-soft:#22364A;--warn:#C9B27F;--warn-soft:#332E22;--red:#D68A8A;}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+*,*::before,*::after{box-sizing:inherit;}
+html,body{height:100%;margin:0;}
+body{background:var(--bg);color:var(--ink);font-family:"Public Sans",-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:16px;line-height:1.45;}
+button,input,select{font:inherit;color:inherit;}button{cursor:pointer;}
+:focus-visible{outline:3px solid var(--pri);outline-offset:2px;}
+
+.top{background:#1B2530;color:#E6EBF0;padding:12px 20px;display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;font-size:14px;}
+.top select{background:#2A3644;color:#E6EBF0;border:1px solid #445265;border-radius:6px;padding:5px 8px;}
+.top .sp{flex:1;}.top span{opacity:.7;}
+
+.page{max-width:760px;margin:0 auto;padding:24px 20px 60px;}
+h1{font-size:22px;font-weight:600;margin:0 0 4px;}
+.sub{color:var(--ink-2);margin:0 0 20px;font-size:15px;}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin-bottom:18px;}
+.step{margin-bottom:26px;}
+.step:last-child{margin-bottom:0;}
+.step h2{font-size:17px;font-weight:600;margin:0 0 4px;}
+.step .help{color:var(--ink-2);font-size:14px;margin:0 0 12px;}
+.chips{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:11px 15px;min-height:46px;font-size:15px;font-weight:500;text-align:left;}
+.chip:hover{border-color:var(--pri);}
+.chip[aria-pressed="true"]{background:var(--pri);color:#fff;border-color:var(--pri);}
+.chip.unk{border-style:dashed;color:var(--ink-2);}
+.chip.unk[aria-pressed="true"]{background:var(--ink-2);border-color:var(--ink-2);color:#fff;}
+.chip .r{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:700;color:#fff;margin-right:6px;vertical-align:1px;}
+.chip small{display:block;font-weight:400;font-size:12.5px;opacity:.75;}
+.more{margin-top:10px;}
+.more summary{cursor:pointer;color:var(--pri);font-weight:600;font-size:14px;list-style:none;}
+.more summary::-webkit-details-marker{display:none;}
+.more summary::before{content:"▸ ";}.more[open] summary::before{content:"▾ ";}
+.fam{margin-top:10px;}
+.fam b{display:block;font-size:13px;color:var(--ink-3);margin:8px 0 6px;font-weight:600;}
+.search{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 12px;background:var(--panel-2);margin:10px 0 6px;}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px;}
+.inp{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--panel);min-height:46px;width:120px;}
+.hidden{display:none;}
+.pick{display:none;background:var(--pri-soft);border-radius:8px;padding:8px 12px;font-size:14px;margin-top:10px;}
+.pick.show{display:block;}
+.warn{background:var(--warn-soft);border-left:3px solid var(--warn);padding:10px 12px;border-radius:6px;font-size:14px;margin-top:14px;}
+.btn{border:0;background:var(--pri);color:#fff;border-radius:10px;padding:14px 22px;font-weight:600;font-size:16px;min-height:50px;}
+.btn.sec{background:var(--panel-2);color:var(--ink);}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:22px;padding-top:18px;border-top:1px solid var(--line);}
+.actions .n{color:var(--ink-2);font-size:14px;}
+
+.tot{display:flex;justify-content:space-between;font-size:14px;color:var(--ink-2);}
+.bar{height:8px;background:var(--panel-2);border-radius:4px;overflow:hidden;margin:6px 0 14px;}
+.bar i{display:block;height:100%;background:var(--pri);}
+.list{list-style:none;margin:0;padding:0;}
+.list li{display:grid;grid-template-columns:70px 1fr auto;gap:12px;padding:12px 0;border-top:1px solid var(--line);align-items:center;font-size:15px;}
+.list .t{font-size:13px;color:var(--ink-2);}.list .t b{display:block;color:var(--ink);font-size:15px;}
+.list .n{font-weight:600;}.list .d{font-size:13px;color:var(--ink-2);margin-top:2px;}
+.list .r{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:700;color:#fff;margin-right:4px;}
+.list .f{color:var(--warn);font-weight:600;}
+.list button{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:6px 10px;font-size:13px;color:var(--ink-2);}
+.empty{color:var(--ink-2);padding:12px 0;}
+.gap{background:var(--warn-soft);border-radius:8px;padding:9px 12px;font-size:14px;margin-bottom:10px;}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#1B2530;color:#fff;padding:11px 18px;border-radius:10px;font-size:15px;display:none;z-index:9;}
+.toast.show{display:block;}
+.foot{font-size:13px;color:var(--ink-2);margin-top:24px;}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <strong>Mock-up</strong>
+  <label>View as <select id="role">
+    <option value="cco">Field CCO · Yakima</option>
+    <option value="rc">Reentry Center CCO · Eleanor Chase, Spokane</option>
+    <option value="sup">Supervisor · Everett</option>
+    <option value="hear">Hearings Officer</option>
+    <option value="rec">Records Technician</option>
+  </select></label>
+  <div class="sp"></div><span>Illustrative data from the 2023 WADOC assessment</span>
+</div>
+
+<div class="page">
+  <h1 id="who">CCO M. Ortega · Yakima Field Office</h1>
+  <p class="sub">Monday, Sep 27 · study day 6 of 20. After each activity, answer the four questions below and press Save. Most entries take under a minute.</p>
+
+  <div class="card" id="form">
+
+    <div class="step">
+      <h2>1. What did you do?</h2>
+      <p class="help">Your most common activities are shown. Open "All activities" for the rest.</p>
+      <div class="chips" id="quick"></div>
+      <details class="more" id="moreD"><summary>All activities</summary>
+        <input class="search" id="search" type="search" placeholder="Search" aria-label="Search activities">
+        <div id="fams"></div>
+      </details>
+      <div class="pick" id="pick1"></div>
+    </div>
+
+    <div class="step" id="stepWho">
+      <h2>2. Which case?</h2>
+      <p class="help">Tap the person from your caseload. Their risk level and stage are attached automatically.</p>
+      <div class="chips" id="cases"></div>
+      <div class="chips" style="margin-top:8px">
+        <button class="chip unk" id="multi" type="button">Several cases at once</button>
+        <button class="chip unk" id="nocase" type="button">Not about a case</button>
+      </div>
+    </div>
+
+    <div class="step">
+      <h2>3. How long?</h2>
+      <p class="help">Just the time doing it. Travel and waiting are asked only when they apply.</p>
+      <div class="chips" id="dur"></div>
+      <div class="row"><input class="inp" id="durMin" type="number" min="1" placeholder="other" aria-label="Other minutes"><span style="color:var(--ink-2);font-size:14px">minutes</span></div>
+      <div class="row hidden" id="travelRow">
+        <label style="font-size:14px">Travel <input class="inp" id="travelMin" type="number" min="0" placeholder="0"></label>
+        <label style="font-size:14px">Waiting <input class="inp" id="waitMin" type="number" min="0" placeholder="0"></label>
+      </div>
+      <div class="row"><label style="font-size:14px">Started at <input class="inp" id="startT" type="time"></label><span style="color:var(--ink-3);font-size:13px">filled in for you: right after your last entry</span></div>
+    </div>
+
+    <div class="step">
+      <h2>4. Could you do it the way it should be done?</h2>
+      <p class="help">By policy or your own judgment. If not, tell us what got in the way.</p>
+      <div class="chips" id="std"><button class="chip" type="button">Yes</button><button class="chip" type="button">Partly</button><button class="chip" type="button">No</button><button class="chip unk" type="button">Not sure</button></div>
+      <div class="chips hidden" id="why" style="margin-top:10px"></div>
+    </div>
+
+    <div id="warn"></div>
+    <div class="actions">
+      <button class="btn" id="save" disabled>Save entry</button>
+      <button class="btn sec" id="clear" type="button">Clear</button>
+      <span class="n" id="need">Pick an activity and a duration to save.</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="tot"><span><b>Today's log</b></span><span id="tot"></span></div>
+    <div class="bar"><i id="bar" style="width:0%"></i></div>
+    <div id="gapNote"></div>
+    <ul class="list" id="list"></ul>
+    <div class="actions"><button class="btn" id="submit">Submit today</button><span class="n">You can change entries for 48 hours. Every change is logged, and no one else can edit them.</span></div>
+  </div>
+
+  <p class="foot">Activity names and menus from the 2023 WADOC/Westat activity glossary, reorganized into role-specific lists per the RTI design memo. Case IDs and names are fictional. Only the officer sees this page; supervisors and site coordinators see whether a day was submitted, not what it contains.</p>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const FAM={assess:"Assessment",plan:"Case planning",ebp:"Behavior change",contact:"Contacts",verify:"Compliance checks",coord:"Services and coordination",viol:"Violations",court:"Court",release:"Release and transfer",doc:"Documentation",cover:"Duty coverage",org:"Office and meetings",unavail:"Leave, training, breaks",facility:"Facility",records:"Records",hearing:"Hearings",staff:"Supervising staff"};
+const MENUS={
+ cco:{who:"CCO M. Ortega · Yakima Field Office",sched:[480,990],quick:["offc","field","scc","staffing","toll","ua","omni","collat"],acts:[
+  ["offc","Office contact","contact",24,1],["field","Field / home visit","contact",20,1,1],["scc","Supervision compliance credits","doc",12,1],["staffing","Case staffing with supervisor / peer","doc",29,1],["toll","Tolling","doc",3,1,0,1],["ua","UA / breathalyzer","verify",8,1],["omni","OMNI documentation (on its own)","doc",32,1],["collat","Collateral contact (employer, treatment, family)","contact",20,1],
+  ["plan","Case plan / 90-day review","plan",42,1],["mi","Behavior change session (MI, skills, BOE)","ebp",44,1],["incent","Incentive / step-down","ebp",13,1],["intake","Intake / orientation","assess",49,1],["waone","WA ONE assessment","assess",31,1],["ccr","Criminal Conviction Record","assess",35,1],["viol","Violation investigation / report","viol",35,1],["sanct","Impose sanction","viol",12,1],["arrest","Arrest / enforcement","viol",79,1,1],["hearprep","Hearing prep / testimony","viol",30,1,1],["warrant","Warrant request","viol",7,1],["psi","Presentence investigation","court",74,1],["orp","Release plan investigation","release",23,1,1],["icots","Interstate compact","release",25,1],["transfer","Transfer / closure","release",13,1],["refer","Referral to program / service","coord",39,1],["provider","Coordination with provider / partner","coord",33,1],["transport","Transport supervised individual","coord",37,1,1],["em","GPS / EM event","verify",11,1],["permit","Travel permit","doc",10,1],
+  ["duty","Unit duty officer","cover",46],["meet","Staff / unit meeting","org",63],["admin","General administration","org",25],["train","Training received","unavail",159],["break","Paid break","unavail",25],["leave","Leave","unavail",240]]},
+ rc:{who:"CCO D. Nakamura · Eleanor Chase House Reentry Center",sched:[420,930],quick:["pass","count","rcomni","mdt","employ","rcua","rcplan","rcintake"],acts:[
+  ["pass","Movement authorization / pass","verify",8,1],["count","Resident check-in / count","facility",12],["rcomni","OMNI documentation (on its own)","doc",30,1],["mdt","MDT meeting","plan",45,1],["employ","Employment / programming verification","verify",20,1],["rcua","UA / breathalyzer","verify",8,1],["rcplan","Case plan / weekly goals","plan",42,1],["rcintake","Resident intake and PREA screening","assess",50,1],
+  ["rcmi","Behavior change session","ebp",44,1],["search","Room / property search","verify",30,1],["infrac","Infraction / sanction","viol",30,1],["rcrel","Release planning with field CCO","release",35,1],["rcref","Referral / community resources","coord",35,1],["escort","Escort / transport resident","coord",30,1,1],["post","Post coverage / floor","cover",120],["facility","Facility task (meals, laundry, maintenance)","facility",30],["rcmeet","Shift briefing / staff meeting","org",30],["rcadmin","General administration","org",25],["rcbreak","Paid break","unavail",25],["rcleave","Leave","unavail",240]]},
+ sup:{who:"CCS R. Halvorsen · Everett Field Office",sched:[480,990],quick:["sstaff","sperf","scov","ssched","smeet","sadmin","sviol","senv"],acts:[
+  ["sstaff","Case staffing with a CCO","doc",25,1],["sperf","Staff performance / case review","staff",33],["scov","Covering a caseload","staff",40,1],["ssched","Staff scheduling","staff",21],["smeet","Meetings","org",60],["sadmin","General administration","org",32],["sviol","Violation / arrest approval","viol",20,1],["senv","1:1s / work environment","staff",51],
+  ["saudit","Data / case audit","staff",56],["sspec","Supervising specialized unit","staff",67],["ssafe","Safety drills","staff",17],["sgriev","Grievance / labor","staff",42],["shire","Hiring","org",75],["sduty","Section duty officer","cover",60],["strain","Training","unavail",150],["sbreak","Paid break","unavail",25],["sleave","Leave","unavail",240]]},
+ hear:{who:"HO T. Bakshi · Hearings Unit",sched:[480,990],quick:["hadmin","hprep","hdecision","hcoord","hsched","hodo","hcourt","hpc"],acts:[
+  ["hadmin","Jail / prison administrative hearing","hearing",30,1,1],["hprep","Hearing prep / file review","hearing",25,1],["hdecision","Decision writing / OMNI entry","doc",20,1],["hcoord","Coordination with CCO / jail / AAG","coord",20,1],["hsched","Scheduling hearings","records",128,1,0,1],["hodo","Hearings duty officer (HODO)","cover",13],["hcourt","Community court hearing","hearing",56,1,1],["hpc","Probable cause process","hearing",18,1],
+  ["happeal","Appeals panel","hearing",75,1],["hafter","After-hours HODO","cover",502],["hmeet","Unit meeting","org",60],["hadminG","General administration","org",25],["htrain","Training","unavail",150],["hbreak","Paid break","unavail",25],["hleave","Leave","unavail",240]]},
+ rec:{who:"CRT L. Delgado · Records Unit",sched:[480,990],quick:["rwarrant","sed","rstatus","rassign","rclose","rfile","rscreen","rmove"],acts:[
+  ["rwarrant","Warrant processing","records",7,1],["sed","Sentence end date review","records",16,1,0,1],["rstatus","Case status check / notifications","records",18,1],["rassign","Assign new case","records",17,1],["rclose","Case closure","records",13,1],["rfile","File legal documents","records",11,1],["rscreen","Supervision screening","records",5,1],["rmove","Jail / prison movement","records",20,1],
+  ["rqc","Quality control / customer service","records",12],["rtransfer","Transfer case","records",15,1],["rcrim","Criminal history request","records",6,1],["rmeet","Unit meeting","org",60],["radmin","General administration","org",25],["rtrain","Training","unavail",150],["rbreak","Paid break","unavail",25],["rleave","Leave","unavail",240]]}
+};
+const RISK={HVPD:"var(--hvpd)",HV:"var(--hv)",HP:"var(--hp)",HD:"var(--hd)",MOD:"var(--mod)",LOW:"var(--low)",UNC:"var(--unc)"};
+const CASES={
+ cco:[["WL-04417","J. Ramirez","HVPD","Days 1–30"],["WL-04422","A. Whitefeather","HV","Ongoing · EM"],["WL-04431","K. Sorensen","HV","Days 31–90"],["WL-04438","M. Tran","HP","Ongoing"],["WL-04440","L. Gutierrez","HP","Violation"],["WL-04452","D. Okafor","HD","Days 31–90 · DOSA"],["WL-04455","S. Nguyen","HD","Ongoing"],["WL-04461","R. Callahan","MOD","Ongoing · SO"],["WL-04463","P. Ivanova","MOD","Closing"],["WL-04470","T. Begay","LOW","Ongoing"],["WL-04472","E. Mwangi","LOW","Interstate"],["WL-04480","New intake","UNC","Days 1–30"]],
+ rc:[["RC-2210","B. Larsen","HV","Pre-release"],["RC-2214","G. Ortiz","HVPD","Pre-release"],["RC-2219","H. Kim","HP","Pre-release"],["RC-2221","New arrival","UNC","Pre-release"],["RC-2225","F. Abdi","HD","Pre-release"],["RC-2230","N. Petrov","MOD","Pre-release"]],
+ sup:[["WL-05101","O. Diallo","HV","Coverage"],["WL-05122","W. Reyes","HP","Coverage"],["WL-05140","V. Lind","HVPD","Violation"]],
+ hear:[["HR-7710","Yakima Jail 9:00","HV","Violation"],["HR-7711","Yakima Jail 9:45","HD","Violation"],["HR-7715","Benton Co. 1:00","HVPD","Violation"],["HR-7718","Probable cause 3:30","MOD","Violation"]],
+ rec:[["RU-3301","SED batch","UNC","12 cases"],["RU-3320","Warrant · Pierce","HV","Violation"],["RU-3322","New case · Everett","HP","Days 1–30"],["RU-3330","Transfer Spokane→Seattle","MOD","Transfer"]]};
+const WHY=["Competing responsibilities","Interruptions","Not enough staff","Caseload too large","Documentation burden","Technology","Waiting on others","Couldn't get information","Person unavailable","Travel distance","Unclear policy","Crisis / emergency","Other"];
+const SEED={cco:[["admin",480,30],["offc",510,35,"WL-04417"],["ua",560,12,"WL-04452"],["field",600,40,"WL-04422",45,5,"No",["Person unavailable"]],["break",690,30]],
+ rc:[["count",420,15],["rcintake",440,70,"RC-2221"],["pass",520,20,"multi"],["mdt",600,60,"RC-2214",0,0,"Partly",["Competing responsibilities"]]],
+ sup:[["smeet",480,60],["sstaff",545,30,"WL-05140"],["scov",600,55,"WL-05101",0,0,"No",["Not enough staff"]]],
+ hear:[["hprep",480,50,"multi"],["hadmin",540,45,"HR-7710",5,10],["hadmin",600,35,"HR-7711",0,5]],
+ rec:[["rwarrant",480,60,"multi"],["sed",540,90,"RU-3301",0,0,"Partly",["Documentation burden"]],["rassign",630,30,"RU-3322"]]};
+const NOW=750;
+
+let role="cco",entries=[],d={};
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const pad=n=>String(n).padStart(2,"0"),m2t=m=>`${pad(Math.floor(m/60))}:${pad(m%60)}`,t2m=t=>{const[a,b]=t.split(":").map(Number);return a*60+b;},fh=m=>`${Math.floor(m/60)}h ${pad(m%60)}m`;
+const A=id=>{const a=MENUS[role].acts.find(x=>x[0]===id);return a&&{id:a[0],n:a[1],fam:a[2],typ:a[3],cs:a[4],tr:a[5],multi:a[6]};};
+const C=id=>CASES[role].find(c=>c[0]===id);
+function press(sel,val){$$(sel).forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===val)));}
+
+/* step 1 */
+function chipAct(a){const b=document.createElement("button");b.type="button";b.className="chip";b.dataset.v=a.id;b.textContent=a.n;b.onclick=()=>{d.a=a.id;press("#quick .chip, #fams .chip",a.id);$("#pick1").textContent="Selected: "+a.n;$("#pick1").classList.add("show");
+  $("#stepWho").style.display=a.cs?"":"none";if(!a.cs){d.c=null;d.multi=false;d.none=true;}else if(a.multi){d.c=null;d.multi=true;d.none=false;press("#cases .chip, #multi, #nocase","multi");}
+  $("#travelRow").classList.toggle("hidden",!a.tr);check();};return b;}
+function renderMenu(f){const M=MENUS[role];$("#quick").innerHTML="";$("#fams").innerHTML="";
+  M.quick.forEach(id=>$("#quick").appendChild(chipAct(A(id))));
+  const g={};M.acts.forEach(x=>{const a=A(x[0]);if(f&&!a.n.toLowerCase().includes(f.toLowerCase()))return;if(!f&&M.quick.includes(a.id))return;(g[a.fam]=g[a.fam]||[]).push(a);});
+  Object.keys(g).forEach(k=>{const div=document.createElement("div");div.className="fam";div.innerHTML=`<b>${FAM[k]}</b><div class="chips"></div>`;g[k].forEach(a=>div.querySelector(".chips").appendChild(chipAct(a)));$("#fams").appendChild(div);});}
+$("#search").oninput=e=>renderMenu(e.target.value);
+
+/* step 2 */
+function renderCases(){$("#cases").innerHTML="";CASES[role].forEach(c=>{const b=document.createElement("button");b.type="button";b.className="chip";b.dataset.v=c[0];b.innerHTML=`<span class="r" style="background:${RISK[c[2]]}">${c[2]}</span>${c[0]}<small>${c[1]} · ${c[3]}</small>`;b.onclick=()=>{d.c=c[0];d.multi=false;d.none=false;press("#cases .chip, #multi, #nocase",c[0]);check();};$("#cases").appendChild(b);});}
+$("#multi").dataset.v="multi";$("#nocase").dataset.v="none";
+$("#multi").onclick=()=>{d.c=null;d.multi=true;d.none=false;press("#cases .chip, #multi, #nocase","multi");check();};
+$("#nocase").onclick=()=>{d.c=null;d.multi=false;d.none=true;press("#cases .chip, #multi, #nocase","none");check();};
+
+/* step 3 */
+$("#dur").innerHTML=[5,10,15,20,30,45,60,90].map(m=>`<button class="chip" type="button" data-v="${m}">${m} min</button>`).join("");
+$("#dur").onclick=e=>{const b=e.target.closest(".chip");if(!b)return;d.dur=+b.dataset.v;$("#durMin").value="";press("#dur .chip",b.dataset.v);check();};
+$("#durMin").oninput=e=>{d.dur=+e.target.value||0;press("#dur .chip","");check();};
+
+/* step 4 */
+$$("#std .chip").forEach(b=>{b.dataset.v=b.textContent;b.onclick=()=>{d.std=b.textContent;press("#std .chip",d.std);$("#why").classList.toggle("hidden",!(d.std==="No"||d.std==="Partly"));};});
+$("#why").innerHTML=WHY.map(w=>`<button class="chip" type="button" data-v="${w}" style="font-size:14px;min-height:40px;padding:8px 12px">${w}</button>`).join("");
+$("#why").onclick=e=>{const b=e.target.closest(".chip");if(!b)return;b.setAttribute("aria-pressed",b.getAttribute("aria-pressed")==="true"?"false":"true");};
+
+function check(){const a=d.a&&A(d.a);const ok=a&&d.dur>0&&(!a.cs||d.c||d.multi||d.none);$("#save").disabled=!ok;
+  $("#need").textContent=!a?"Pick an activity to start.":!(d.c||d.multi||d.none)&&a.cs?"Now pick the case.":!d.dur?"Now pick how long it took.":"Ready to save.";}
+function reset(){d={std:"Yes"};press("#quick .chip, #fams .chip, #cases .chip, #multi, #nocase, #dur .chip","");press("#std .chip","Yes");$$("#why .chip").forEach(b=>b.setAttribute("aria-pressed","false"));$("#why").classList.add("hidden");
+  $("#pick1").classList.remove("show");$("#stepWho").style.display="";$("#travelRow").classList.add("hidden");$("#durMin").value="";$("#travelMin").value="";$("#waitMin").value="";$("#warn").innerHTML="";
+  const last=entries.length?Math.max(...entries.map(e=>e.e)):MENUS[role].sched[0];$("#startT").value=m2t(last);check();}
+$("#clear").onclick=reset;
+$("#save").onclick=()=>{const s=t2m($("#startT").value),tr=+$("#travelMin").value||0,wt=+$("#waitMin").value||0,e=s+d.dur+tr+wt;
+  const ov=entries.find(x=>s<x.e&&e>x.s);
+  if(ov&&!d.ovOk){d.ovOk=true;$("#warn").innerHTML=`<div class="warn">This overlaps <b>${m2t(ov.s)}–${m2t(ov.e)} ${A(ov.a).n}</b>. If you really did both at once, press Save again (it will count as multitasking). Otherwise change the start time.</div>`;return;}
+  entries.push({id:"e"+Date.now(),a:d.a,s,e,dur:d.dur,c:d.c,multi:d.multi,travel:tr,wait:wt,std:d.std||"Yes",why:$$("#why [aria-pressed=true]").map(b=>b.textContent)});
+  const name=A(d.a).n;reset();renderLog();toast(`Saved: ${name}, ${entries[entries.length-1].dur} min`);window.scrollTo({top:$("#list").offsetTop-120,behavior:"smooth"});};
+$("#submit").onclick=()=>toast("Day submitted. Thank you.");
+
+/* log */
+function renderLog(){const M=MENUS[role],tot=entries.reduce((s,e)=>s+(e.e-e.s),0),sched=M.sched[1]-M.sched[0];
+  $("#tot").textContent=`${fh(tot)} logged of ${fh(sched)} scheduled`;$("#bar").style.width=Math.min(100,tot/sched*100)+"%";
+  const ul=$("#list");ul.innerHTML=entries.length?"":`<li class="empty" style="display:block">Nothing logged yet.</li>`;
+  [...entries].sort((a,b)=>a.s-b.s).forEach(e=>{const a=A(e.a),c=e.c&&C(e.c),li=document.createElement("li");
+    li.innerHTML=`<div class="t"><b>${m2t(e.s)}</b>${e.dur} min${e.travel?` +${e.travel} travel`:""}</div><div><div class="n">${a.n}</div><div class="d">${c?`<span class="r" style="background:${RISK[c[2]]}">${c[2]}</span>${c[0]} · ${c[3]}`:e.multi?"Several cases":"Not about a case"}${e.std!=="Yes"?` · <span class="f">${e.std==="No"?"Not done to standard":e.std==="Partly"?"Partly to standard":"Standard unsure"}${e.why[0]?": "+e.why[0]:""}</span>`:""}${e.dur>Math.max(a.typ*3,90)?` · <span class="f">longer than usual — ok?</span>`:""}</div></div><button data-x="${e.id}">Remove</button>`;ul.appendChild(li);});
+  ul.querySelectorAll("[data-x]").forEach(b=>b.onclick=()=>{entries=entries.filter(x=>x.id!==b.dataset.x);renderLog();reset();toast("Removed (logged)");});
+  const last=entries.length?Math.max(...entries.map(e=>e.e)):M.sched[0],gap=NOW-last;
+  $("#gapNote").innerHTML=gap>=20?`<div class="gap">It's now ${m2t(NOW)}. About ${gap} minutes since your last entry aren't logged yet. Add them above, or leave it if you weren't working.</div>`:"";}
+
+function load(){entries=SEED[role].map((s,i)=>({id:"e"+i,a:s[0],s:s[1],dur:s[2],c:s[3]==="multi"?null:s[3]||null,multi:s[3]==="multi",travel:s[4]||0,wait:s[5]||0,std:s[6]||"Yes",why:s[7]||[],e:s[1]+s[2]+(s[4]||0)+(s[5]||0)}));
+  $("#who").textContent=MENUS[role].who;renderMenu("");renderCases();renderLog();reset();}
+$("#role").onchange=e=>{role=e.target.value;load();};
+let tt;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),2800);}
+load();
+</script>
+</body>
+</html>
